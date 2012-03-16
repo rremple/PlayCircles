@@ -9,10 +9,9 @@
     
     Although Venn diagrams are meant to be abstract representations of sets
     and set relationships, people often intentionally scale the shapes. 
-    Larger sets are
-    represented by larger shapes and larger intersections are represented by 
-    greater overlaps of those shapes. But in general, folks only take this 
-    idea part of the way. Although shapes and intersections are often scaled, 
-    in general the scaling is "eyeballed" and not calculated mathematically.
-    This tool allows a user to specify precise sizes of three sets and the 
-    intersections of each pair of sets. 
+    Larger sets are represented by larger shapes and larger intersections 
+    are represented by greater overlaps of those shapes. But in general, 
+    folks only take this idea part of the way. Although shapes and 
+    intersections are often scaled, in general the scaling is "eyeballed" 
+    and not calculated mathematically. This tool allows a user to specify 
+    precise sizes of three sets and the intersections of each pair of sets. 
