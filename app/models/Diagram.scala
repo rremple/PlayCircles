@@ -11,80 +11,75 @@ class Diagram(val params: DiagramParameters) {
 
   private def square(x: Double) = pow(x, 2)
 
-  // idealized circles just have a name and an area, but no center
-  private val idealCircleA = IdealCircle("A", params.aArea)
-  private val idealCircleB = IdealCircle("B", params.bArea)
-  private val idealCircleC = IdealCircle("C", params.cArea)
+  // initialize circles and intersections
+  val (circleA, circleB, circleC, intersectionAB, intersectionBC, intersectionCA) = {
 
-  // idealized circle intersections are defined in terms of idealized circles
-  private val idealIntersectionAB = IdealCircleIntersection(idealCircleA, idealCircleB, params.abArea)
-  private val idealIntersectionBC = IdealCircleIntersection(idealCircleB, idealCircleC, params.bcArea)
-  private val idealIntersectionCA = IdealCircleIntersection(idealCircleC, idealCircleA, params.caArea)
+    // start with idealized circles, which just have a name and an area, but no center
+    val idealCircleA = IdealCircle("A", params.aArea)
+    val idealCircleB = IdealCircle("B", params.bArea)
+    val idealCircleC = IdealCircle("C", params.cArea)
 
-  //shorthand for "sep" private values -- these will define the triangle of circle centers
-  private val ab = idealIntersectionAB.sep
-  private val bc = idealIntersectionBC.sep
-  private val ca = idealIntersectionCA.sep
+    // and with idealized circle intersections, which are defined in terms of idealized circles
+    val idealIntersectionAB = IdealCircleIntersection(idealCircleA, idealCircleB, params.abArea)
+    val idealIntersectionBC = IdealCircleIntersection(idealCircleB, idealCircleC, params.bcArea)
+    val idealIntersectionCA = IdealCircleIntersection(idealCircleC, idealCircleA, params.caArea)
 
-  // define actual circles (with locations based on a center)
-  // and actual intersections (with locations and rotations)
+    // use shorthands for "sep" values -- these will define the triangle of circle centers
+    val ab = idealIntersectionAB.sep
+    val bc = idealIntersectionBC.sep
+    val ca = idealIntersectionCA.sep
 
-  // circle A and intersection AB
+    // define actual circles (with locations based on a center)
+    // and actual intersections (with locations and rotations)
 
-  private val centerA = Point(0, 0) // put A at the origin
-  private val circleA = idealCircleA.realizeWith(centerA)
-  private val intersectionABrotation = 0
+    // circle A and intersection AB
 
-  private val intersectionAB = idealIntersectionAB.realizeWith(centerA,
-    intersectionABrotation)
+    val centerA = Point(0, 0) // put A at the origin
+    val circleA = idealCircleA.realizeWith(centerA)
+    val intersectionABrotation = 0
 
-  // circle B and intersection BC
+    val intersectionAB = idealIntersectionAB.realizeWith(centerA, intersectionABrotation)
 
-  private val centerB = Point(ab, 0) // on x-axis to the right of A
-  private val circleB = idealCircleB.realizeWith(centerB)
-  private val intersectionBCrotation =
-    if ((ab == 0) || (bc == 0)) {
-      intersectionAB.rotation
-    } else {
+    // circle B and intersection BC
+
+    val centerB = Point(ab, 0) // on x-axis to the right of A
+    val circleB = idealCircleB.realizeWith(centerB)
+    val intersectionBCrotation = if ((ab == 0) || (bc == 0)) intersectionAB.rotation else {
       val cosOfAngle = (square(ab) + square(bc) - square(ca)) / (2 * ab * bc)
       if (abs(cosOfAngle) > 1)
         throw new RuntimeException("Geometry found inconsistent when calculating B\u2229C rotation")
       intersectionAB.rotation + Pi - acos(cosOfAngle)
     }
 
-  private val intersectionBC = idealIntersectionBC.realizeWith(centerB,
-    intersectionBCrotation)
+    val intersectionBC = idealIntersectionBC.realizeWith(centerB, intersectionBCrotation)
 
-  // circle C and intersection CA
+    // circle C and intersection CA
 
-  private val x =
-    if (ab == 0) {
-      circleA.center.x
-    } else {
+    val x = if (ab == 0) circleA.center.x else {
       (square(ca) + square(ab) - square(bc)) / (2 * ab)
     }
 
-  private val squareOfY = square(ca) - square(x)
-  if (squareOfY < 0)
-    throw new RuntimeException("Geometry found inconsistent when calculating C center")
+    val squareOfY = square(ca) - square(x)
+    if (squareOfY < 0)
+      throw new RuntimeException("Geometry found inconsistent when calculating C center")
 
-  private val centerC = Point(x, sqrt(squareOfY))
-  private val circleC = idealCircleC.realizeWith(centerC)
-  private val intersectionCArotation = if ((ca == 0) || (bc == 0))
-    intersectionBC.rotation
-  else {
-    val cosOfAngle = (square(bc) + square(ca) - square(ab)) / (2 * bc * ca)
-    if (abs(cosOfAngle) > 1)
-      throw new RuntimeException("Geometry found inconsistent when calculating C\u2229A rotation")
-    intersectionBC.rotation + Pi - acos(cosOfAngle)
+    val centerC = Point(x, sqrt(squareOfY))
+    val circleC = idealCircleC.realizeWith(centerC)
+    val intersectionCArotation = if ((ca == 0) || (bc == 0)) intersectionBC.rotation else {
+      val cosOfAngle = (square(bc) + square(ca) - square(ab)) / (2 * bc * ca)
+      if (abs(cosOfAngle) > 1)
+        throw new RuntimeException("Geometry found inconsistent when calculating C\u2229A rotation")
+      intersectionBC.rotation + Pi - acos(cosOfAngle)
+    }
+
+    val intersectionCA = idealIntersectionCA.realizeWith(centerC, intersectionCArotation)
+
+    (circleA, circleB, circleC, intersectionAB, intersectionBC, intersectionCA)
   }
 
-  private val intersectionCA = idealIntersectionCA.realizeWith(centerC,
-    intersectionCArotation)
-
-  // and finally, now that all the circles are defined, 
+  // now that all the circles are defined, 
   // the boundaries of the grid can be established
-  private val gridDimension = GridDimension(circleA, circleB, circleC);
+  val gridDimension = GridDimension(circleA, circleB, circleC);
 
   val intersectionABC = {
     //    if (circleA.contains(circleB)||circleA.contains(circleC)) Scalar.format(intersectionBC.area)
@@ -115,21 +110,17 @@ class Diagram(val params: DiagramParameters) {
     val caP = intersectionCA.chord.p1
 
     //this doesn't always work
-    if (circleA.contains(bcP) &&
-      circleB.contains(caP) &&
-      circleC.contains(abP)) {
-      Scalar.format(segmentArea(circleA, LineSegment(abP, caP), bcP) +
-        segmentArea(circleB, LineSegment(bcP, abP), caP) +
-        segmentArea(circleC, LineSegment(caP, bcP), abP) +
-        triangleArea(abP.distance(bcP),
-          bcP.distance(caP),
-          caP.distance(abP))) + " = " +
+    if (circleA.contains(bcP) && circleB.contains(caP) && circleC.contains(abP)) {
+      Scalar.format(
+        segmentArea(circleA, LineSegment(abP, caP), bcP) +
+          segmentArea(circleB, LineSegment(bcP, abP), caP) +
+          segmentArea(circleC, LineSegment(caP, bcP), abP) +
+          triangleArea(abP.distance(bcP), bcP.distance(caP), caP.distance(abP))
+      ) + " = " +
         Scalar.format(segmentArea(circleA, LineSegment(abP, caP), bcP)) + " + " +
         Scalar.format(segmentArea(circleB, LineSegment(bcP, abP), caP)) + " + " +
         Scalar.format(segmentArea(circleC, LineSegment(caP, bcP), abP)) + " + " +
-        Scalar.format(triangleArea(abP.distance(bcP),
-          bcP.distance(caP),
-          caP.distance(abP)))
+        Scalar.format(triangleArea(abP.distance(bcP), bcP.distance(caP), caP.distance(abP)))
     } else "0"
   }
 
