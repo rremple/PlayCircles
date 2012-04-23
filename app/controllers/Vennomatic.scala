@@ -9,7 +9,7 @@ import play.api.data.validation.Constraints._
 import views._
 
 import models._
- 
+
 object Vennomatic extends Controller {
 
   /**
@@ -38,24 +38,25 @@ object Vennomatic extends Controller {
    */
   def submit = Action { implicit request =>
     vennomaticForm.bindFromRequest.fold(
-      // If the form has errors (e.g., field invalid, like circle size<0), just redisplay it with a generic message
-      errors => BadRequest(html.vennomatic.form(errors, Left(List("Bad request")))),
-      // If there are no errors, then validate the parameters and display a new diagram
-      params => {
-        params.errors match {
-          case List() => // no validation errors
-            try {
-              val diagram = Diagram(params)
-              Ok(html.vennomatic.form(vennomaticForm.fill(params), Right(Some(diagram))))
-            } catch {
-              case e: RuntimeException => // calculation error (e.g. inconsistent geometry)
-                BadRequest(html.vennomatic.form(vennomaticForm.fill(params), Left(List(e.getMessage))))
-            }
-          case _ => // validation errors 
-            BadRequest(html.vennomatic.form(vennomaticForm.fill(params), Left(params.errors)))
-        }
-      }
+      errors => BadRequest(html.vennomatic.form(errors, Left(List("Bad request")))), // e.g., field invalid, like circle size<0
+      params => validateAndDisplayDiagram(params) // no form errors
     )
+  }
+
+  private def validateAndDisplayDiagram(params: DiagramParameters) = {
+    params.errors match {
+      case List() => displayDiagram(params) // no validation errors
+      case _ => BadRequest(html.vennomatic.form(vennomaticForm.fill(params), Left(params.errors))) // e.g., intersection > circle size
+    }
+  }
+
+  private def displayDiagram(params: DiagramParameters) = {
+    try { 
+      Ok(html.vennomatic.form(vennomaticForm.fill(params), Right(Some(Diagram(params))))) // no calculation errors for new diagram
+    } catch {
+      case e: RuntimeException => 
+        BadRequest(html.vennomatic.form(vennomaticForm.fill(params), Left(List(e.getMessage)))) // e.g. inconsistent geometry
+    }
   }
 
   /**

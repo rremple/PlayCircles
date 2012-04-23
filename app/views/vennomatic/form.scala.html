@@ -3,70 +3,67 @@
 
 @import helper._
 
-@main(Html("Venn-o-matic"), nav = "vennomatic") {
-    
+@main(Html("Venn-o-matic"), nav = "vennomatic") {    
+
+  <div class="description">
     Build a geometrically correct Venn diagram by entering areas for each 
     of three circles and their intersections:
+  </div>
 
-    @helper.form(action = routes.Vennomatic.submit) {
+  <div class-"action">
+    @helper.form(action = routes.Vennomatic.submit)(showForm(paramForm))
+  </div>
+
+  <div class="diagram">
+    @params.fold(showErrors, showDiagram)
+  </div>
+}
+
+@showForm(paramForm: Form[DiagramParameters]) = {
       <table border="none">
         <tr>
-          <td>
-            @inputText(
+          <td>@inputText(
                 paramForm("a"), 
                 '_label -> "A:", 
                 '_help -> "Area of circle a.",
                 '_error -> paramForm.globalError
-            )
-          </td><td>
-            @inputText(
+            )</td>
+          <td>@inputText(
                 paramForm("b"), 
                 '_label -> "B:", 
                 '_help -> "Area of circle b.",
                 '_error -> paramForm.globalError
-            )
-          </td><td>
-            @inputText(
+            )</td>
+          <td>@inputText(
                 paramForm("c"), 
                 '_label -> "C:", 
                 '_help -> "Area of circle c.",
                 '_error -> paramForm.globalError
-            )
-          </td>
-        </tr><tr>
-          <td>
-            @inputText(
+            )</td>
+        </tr>
+        <tr>
+          <td>@inputText(
                 paramForm("ab"), 
-                '_label -> "A∩B:", 
+                '_label -> "A\u2229B:", 
                 '_help -> "Intersection of circles a and b.",
                 '_error -> paramForm.globalError
-            )
-          </td><td>
-            @inputText(
+            )</td>
+          <td>@inputText(
                 paramForm("bc"), 
-                '_label -> "B∩C:", 
+                '_label -> "B\u2229C:", 
                 '_help -> "Intersection of circles b and c.",
                 '_error -> paramForm.globalError
-            )
-          </td><td>
-            @inputText(
+            )</td>
+          <td>@inputText(
                 paramForm("ca"), 
-                '_label -> "C∩A:", 
+                '_label -> "C\u2229A:", 
                 '_help -> "Intersection of circles c and a.",
                 '_error -> paramForm.globalError
-            )
-          </td>
+            )</td>
         </tr>
       </table>
-
-      <div class="actions">
-        <input type="submit" value="Submit">
-      </div>
-    }
-
-    <div class="diagram">
-      @params.fold(showErrors, showDiagram)
-    </div>
+  
+      <input type="submit" value="Submit">
 }
 
 @showErrors(errors: List[String]) = {
@@ -81,7 +78,7 @@
 @showDiagram(diagram: Option[Diagram]) = {
   @diagram.map { d =>
     <span id="diagram">
-      A∩B∩C: <span id="intersectionABC">@d.toSvgIntersectionABC</span> 
+      A\u2229B\u2229C: <span id="intersectionABC">@d.toSvgIntersectionABC</span> 
       <svg viewBox="@d.toSvgViewBoxAttribute" 
            height="65%" version="1.1" id="svgelem" xmlns="http://www.w3.org/2000/svg">
         <g stroke-width="100%" stroke-dasharray="0.1,0.9" stroke="lightblue" id="grid">@d.toSvgGrid</g>
